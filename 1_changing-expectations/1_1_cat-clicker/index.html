@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="styles.css">
+
+    <script>
+        function initializeApp() {
+            var imgPath = "img/";
+            var catsData = [
+                {"name": "Tom", "imgPath": imgPath+"cat1.jpg", "counter": 0},
+                {"name": "Garfield", "imgPath": imgPath+"cat2.jpg", "counter": 0},
+                {"name": "Misi", "imgPath": imgPath+"cat3.jpg", "counter": 0},
+                {"name": "Pancho", "imgPath": imgPath+"cat4.jpg", "counter": 0},
+                {"name": "Colorines", "imgPath": imgPath+"cat5.jpg", "counter": 0},
+                {"name": "Maachimoo, cabeza de gamba", "imgPath": imgPath+"cat6.jpg", "counter": 0},
+                {"name": "Me caigo p´atrás", "imgPath": imgPath+"cat7.jpg", "counter": 0},
+                {"name": "Ganz cool", "imgPath": imgPath+"cat8.jpg", "counter": 0},
+                {"name": "Hastaluego Kitty", "imgPath": imgPath+"cat9.jpg", "counter": 0},
+                {"name": "Man Duchao", "imgPath": imgPath+"cat10.jpg", "counter": 0},
+                {"name": "Cago n tu puta madre", "imgPath": imgPath+"cat11.jpg", "counter": 0},
+                {"name": "Bustamiaunte", "imgPath": imgPath+"cat12.jpg", "counter": 0},
+            ];
+            var totalCats = catsData.length;
+            var i;
+            var eventListener;
+
+            for (i = 0; i < totalCats; i++) {
+                var elem = document.createElement('li');
+                elem.setAttribute("class", "cat-elem");
+                elem.textContent = catsData[i].name;
+                createTextArea();
+                elem.addEventListener('click', function (i) {
+                    return function() {
+                        eventListener = onListElemClicked(catsData[i], eventListener);
+                    };
+                }(i));
+                document.getElementById('cat-list').appendChild(elem);
+            }
+        }
+
+        function createTextArea () {
+            var elem = document.getElementById('cat-area');
+            // Add name
+            var nameElem = document.createElement('p');
+            nameElem.setAttribute("class", "name");
+            elem.appendChild(nameElem);
+            // Add picture
+            var imgElem = document.createElement('img');
+            imgElem.setAttribute("class", "picture");
+            elem.appendChild(imgElem);
+            // Add counter
+            var counterElem = document.createElement('p');
+            counterElem.setAttribute("class", "counter");
+            elem.appendChild(counterElem);
+        }
+
+
+        function onListElemClicked (catData, eventListener) {
+            var imgElem, counterElem;
+            var catArea = document.getElementById('cat-area');
+            // Update name
+            catArea.getElementsByClassName('name')[0].textContent = catData.name;
+            // Update picture
+            imgElem = catArea.getElementsByClassName('picture')[0];
+            imgElem.src = catData.imgPath;
+            // Update counter
+            counterElem = catArea.getElementsByClassName('counter')[0];
+            counterElem.textContent = catData.counter + " clicks";
+            // Add event listener for image
+            imgElem.removeEventListener('click', eventListener);
+            eventListener = function () {
+                catData.counter += 1;
+                counterElem.textContent = catData.counter + " clicks";
+            };
+            imgElem.addEventListener('click', eventListener);
+            return eventListener;
+        }
+
+
+        function manageSpecialText (clickCounter){
+            var message = document.getElementById('message');
+            message.innerHTML = "";
+            if (clickCounter%5 === 0) {
+                message.innerHTML = "<br/>Wow! Keep clicking!";
+                setTimeout(function() {
+                        message.innerHTML = "";
+                }, 2000);
+            }
+        }
+
+    </script>
+
+
+
+</head>
+<body onload="initializeApp()">
+    <div class="header">
+    </div>
+    <div id="content">
+        <ul id="cat-list"></ul>
+        <div id="cat-area"></div>
+     </div>
+
+</body>
+
+
+
+
+</html>
+
+

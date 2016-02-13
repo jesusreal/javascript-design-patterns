@@ -1,0 +1,5 @@
+{
+ "injectChanges": false,
+ "files": [ "./**/*.{html,htm,css,js}" ],
+ "server": { "baseDir": "./2_refactoring-with-separations-of-concerns/1_1_cat-clicker/" }
+}
