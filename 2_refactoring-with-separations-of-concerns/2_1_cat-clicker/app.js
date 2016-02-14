@@ -1,6 +1,9 @@
 var model = {
     init: function() {
-        var catsData = [];
+        // With a backend implementation, we would get here the cats
+        // and save them to localStorage
+        var cats = [];
+        var idCounter = 1;
         // Uncomment this to keep data after page reload
         // if (!localStorage.cats) {
             catNames = [
@@ -18,31 +21,42 @@ var model = {
                 "Bustamiaunte"
             ];
             for (var i=0, totalCats=catNames.length; i<totalCats; i++) {
-                catsData.push({
-                    "index": catsData.length+1,
+                cats.push({
+                    "id": idCounter++,
                     "name": catNames[i],
-                    "imgPath": "img/cat" + (i+1) + ".jpg",
+                    "picture": "img/cat" + (i+1) + ".jpg",
                     "counter": 0,
                 });
             }
-            localStorage.cats = JSON.stringify(catsData);
+            localStorage.cats = JSON.stringify(cats);
         // }
-        localStorage.notificationTimeout = "{}";
+        localStorage.currentCat = JSON.stringify(cats[0]);
+        localStorage.notificationTimeout = JSON.stringify("undefined");
     },
-    getData: function() {
+    getCats: function() {
         return JSON.parse(localStorage.cats);
     },
-    getCatByName: function(catName) {
-        var cats = this.getData();
+    getCatWithId: function(catId) {
+        var cats = this.getCats();
         for (var i = 0, totalCats = cats.length; i < totalCats; i++) {
-            if (cats[i].name === catName) {
+            if (cats[i].id === catId) {
                 return cats[i];
             }
         }
     },
-    updateCat: function(cat) {
-        var cats = this.getData();
-        cats[cat.index] = cat;
+    getCurrentCat: function() {
+        return JSON.parse(localStorage.currentCat);
+    },
+    setCurrentCat: function(cat) {
+        localStorage.currentCat = JSON.stringify(cat);
+    },
+    updateCatClickCounter: function() {
+        var cat = this.getCurrentCat();
+        cat.counter += 1;
+        this.setCurrentCat(cat);
+
+        var cats = this.getCats();
+        cats.getCatWithId(cat.id).counter = cat.counter;
         localStorage.cats = JSON.stringify(cats);
     },
     setNotificationTimeout: function(notificationTimeout) {
@@ -50,6 +64,9 @@ var model = {
     },
     getNotificationTimeout: function() {
         return JSON.parse(localStorage.notificationTimeout);
+    },
+    deleteNotificationTimeout: function() {
+        localStorage.notificationTimeout = JSON.stringify("undefined");
     }
 };
 
@@ -57,65 +74,101 @@ var model = {
 var octopus = {
     initApp: function() {
         model.init();
-        var cats = model.getData();
+        var cats = model.getCats();
         catListView.init(cats);
         catAreaView.init(cats[0]);
+        clickNotificationView.init();
     },
-    onListElemClicked: function(catName) {
+    getCurrentCat: function() {
+        return model.getCurrentCat();
+    },
+    getCats: function() {
+        return model.getCats();
+    },
+    onListElemClicked: function(catId) {
         clearTimeout(model.getNotificationTimeout());
-        var cat = model.getCatByName(catName);
-        catAreaView.init(cat);
+        var cat = model.getCatWithId(catId);
+        model.setCurrentCat(cat);
+        catAreaView.render();
+        clickNotificationView.render();
     },
-    onCatImgClicked: function(catName) {
-        var cat = model.getCatByName(catName);
-        cat.counter += 1;
-        model.updateCat(cat);
-        cat = this.updateCatWithSpecialMessage(cat);
-        catAreaView.init(cat);
+    onCatImgClicked: function() {
+        clearTimeout(model.getNotificationTimeout());
+        model.updateCatClickCounter();
+        catAreaView.render();
+        clickNotificationView.render();
     },
-    updateCatWithSpecialMessage: function(cat) {
-        if (cat.counter%5 === 0) {
-            cat.message = "Wow! Keep clicking!";
-            var timeout = setTimeout(function() {
-                cat.message = "";
-                catAreaView.init(cat);
+    getCurrentCatNotification: function() {
+        var timeout, message;
+        cat = model.getCurrentCat();
+        if (cat.counter > 0 && cat.counter%5 === 0) {
+            message = "Wow! Keep clicking!";
+            timeout = setTimeout(function() {
+                clickNotificationView.render("");
             }, 2000);
             model.setNotificationTimeout(timeout);
         }
-        return cat;
+        return message || '';
     }
 };
 
 
 var catListView = {
-    init: function(cats) {
-        this.render(cats);
+    init: function() {
+        this.catList = document.getElementById('cat-list');
+        this.render();
     },
-    render: function(cats) {
-        var catList = document.getElementById('cat-list');
-        var htmlStr = "";
+    render: function() {
+        var cats = octopus.getCats();
+        var listElem;
         for (var i = 0, totalCats = cats.length; i < totalCats; i++) {
-            htmlStr += "<li class='cat-elem' onclick='octopus.onListElemClicked(\"" + cats[i].name + "\")'>" + cats[i].name + "</li>";
+            cat = cats[i];
+            listElem = document.createElement('li');
+            listElem.textContent = cat.name;
+            listElem.addEventListener('click', (function(catCopyId){
+                return function(){
+                    return octopus.onListElemClicked(catCopyId);
+                };
+            })(cat.id));
+            this.catList.appendChild(listElem);
         }
-        catList.innerHTML = htmlStr;
     }
 };
 
 
 var catAreaView = {
-    init: function(cat) {
-        cat.message = cat.message || "";
+    init: function() {
         this.elem = document.getElementById('cat-area');
-        this.render(cat);
+        this.elems = {
+            "name": document.getElementById('name'),
+            "picture": document.getElementById('picture'),
+            "counter": document.getElementById('counter'),
+        };
+        this.elems.picture.addEventListener('click', function(){
+            octopus.onCatImgClicked();
+        });
+        this.render();
     },
-    render: function(catData) {
-        htmlStr = "<p class='name cat-param'>" + catData.name + "</p>" +
-                        "<img class='picture cat-param' onclick='octopus.onCatImgClicked(\"" + catData.name + "\")' src='" + catData.imgPath + "'></img>" +
-                        "<p class='counter cat-param'>" + catData.counter + "</p>" +
-                        "<p id='message cat-param'>" + catData.message + "</p>";
-        this.elem.innerHTML = htmlStr;
+    render: function() {
+        var cat = octopus.getCurrentCat();
+        this.elems.name.textContent = cat.name;
+        this.elems.picture.src = cat.picture;
+        this.elems.counter.textContent = cat.counter;
     }
 };
 
 
+var clickNotificationView = {
+    init: function() {
+        this.elem = document.getElementById('message');
+        this.render();
+    },
+    render: function(){
+        if (this.elem.textContent === "") {
+            this.elem.textContent = octopus.getCurrentCatNotification();
+        } else {
+            this.elem.textContent = "";
+        }
+    }
+};
 
