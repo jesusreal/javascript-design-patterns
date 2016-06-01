@@ -18,7 +18,11 @@ var model = {
                 "Hastaluego Kitty",
                 "Man Duchao",
                 "Cago n tu puta madre",
-                "Bustamiaunte"
+                "Bustamiaunte",
+                "No encuentro las llaves",
+                "Patada en los huevos",
+                "Are you talking to me",
+                "Carapan"
             ];
             for (var i=0, totalCats=catNames.length; i<totalCats; i++) {
                 cats.push({
